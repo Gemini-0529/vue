@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="app">
+    <!-- 通过hook钩子 从组件外部为组件内部注入额外的生命周期方法 -->
+    <!-- 应用场景：子组件内获取数据响应时间长，加个loading但是不想修改子组件代码 -->
+    <comp @hook:mounted="handleMounted"/>
+  </div>
+  <script src="../../dist/vue.js"></script>
+  <script>
+    const obj = {
+      name: 'z'
+    }
+    const proxy = new Proxy(obj, {
+      get(target,value) {
+        return target[value]
+      },
+      set(target,key,value) {
+        target[key] = value
+      }
+    })
+    console.log('proxy',proxy);
+    proxy.name = '333'
+    console.log('proxy',proxy);
+    console.log('obj',obj);
+  </script>
+  <script>
+    Vue.component('comp',{
+      template: `
+        <ul>
+          <li v-for="item in arr" :key="item">{{ item }}</li>  
+        </ul>
+      `,
+      data() {
+        return {
+          arr: []
+        }
+      },
+      async mounted() {
+        console.log('comp-->','mounted');
+        this.arr = await new Promise(res => {
+          setTimeout(() => {
+            res([1,2,3,4,5])
+          },1000)
+        })
+      },
+    })
+    new Vue({
+      el: '#app',
+      methods: {
+        handleMounted() {
+          console.log('loading ... ');
+        }
+      }
+    })
+  </script>
+</body>
+</html>
